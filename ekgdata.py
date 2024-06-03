@@ -57,12 +57,18 @@ class EKGdata:
         self.fig.add_trace(go.Scatter(x=time_values_s, y=self.df['EKG in mV'], mode='lines', name='EKG Signal', yaxis='y1'))
         self.fig.add_trace(go.Scatter(x=time_values_s[self.peaks], y=self.df['EKG in mV'][self.peaks], mode='markers', name='Peaks', marker=dict(color='red', size=10, symbol='x'), yaxis='y1'))
         self.fig.add_trace(go.Scatter(x=time_values_s[self.peaks], y=self.estimated_hr_list, mode='lines', name='Estimated Heartrate', yaxis='y2'))
+
+        # Beispiel für den anfänglichen Zoom auf die ersten 10 Sekunden
+        initial_zoom_start = 0
+        initial_zoom_end = 10  # in Sekunden
+
         self.fig.update_layout(
             title='Peaks im EKG-Signal',
             xaxis_title='Zeit [s]',
             yaxis=dict(title='Amplitude [mV]', side='left', autorange=True),
             yaxis2=dict(title='Herzfrequenz [bpm]', overlaying='y', side='right', autorange=True),
-            showlegend=True
+            showlegend=True,
+            xaxis=dict(range=[initial_zoom_start, initial_zoom_end])  # Anfangsbereich festlegen
         )
         return self.fig
     
@@ -86,8 +92,8 @@ if __name__ == "__main__":
     dbecg.truncate()
     EKGdata.load_ekg_data("data/person_db.json")
     print(dbecg.all())
-    first_entry = dbecg.all()[0]
-    EKG1 = EKGdata(first_entry)
+    EKG1 = EKGdata(dbecg.get(doc_id=1))
+    EKG2 = EKGdata(dbecg.get(doc_id=3))
 
     """
     print("This is a module with some functions to read the EKG data")
