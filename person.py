@@ -43,37 +43,46 @@ class Person:
             print("Bis jetzt nur json")
 
     @staticmethod
-    def get_person_list(person_data):
+    def add_user(firstname, lastname, date_of_birth, id, ekg_tests, picture_path):
+        """A Function that adds a new user to the person database"""
+        data = {"firstname": firstname, 
+                "lastname": lastname, 
+                "date_of_birth": date_of_birth,
+                "id": id,
+                "ekg_tests": ekg_tests,
+                "picture_path": picture_path}
+        db.insert(data)
+    
+    @staticmethod
+    def del_user(id):
+        """A Function that deletes a user from the person database"""
+        db.remove(doc_ids=[id])
 
-        """"
-        A Function that takes the persons-dictionary and returns a list auf all person names
-        list_of_names = []
+    @staticmethod
+    def get_person_list(db):
+        """A Function that takes the persons-dictionary and returns a list auf all person names"""
+        list_of_names = [] #Liste für alle Namen
 
-        for eintrag in person_data:
-            list_of_names.append(eintrag["lastname"] + ", " +  eintrag["firstname"])
-        return list_of_names"""
+        for eintrag in db:
+            list_of_names.append(eintrag.get("firstname") + " " + eintrag.get("lastname"))
+        return list_of_names
     
     @staticmethod
     def find_person_data_by_name(suchstring):
         """ Eine Funktion der Nachname, Vorname als ein String übergeben wird
         und die die Person als Dictionary zurück gibt"""
+        fullname = suchstring.split(", ")
+        fn = fullname[1]
+        ln = fullname[0]
 
-        person_data = Person.load_person_data()
-        #print(suchstring)
-        if suchstring == "None":
-            return {}
-
-        two_names = suchstring.split(", ")
-        vorname = two_names[1]
-        nachname = two_names[0]
-
-        for eintrag in person_data:
-            if (eintrag["lastname"] == nachname and eintrag["firstname"] == vorname):
-                print()
-
-                return eintrag
+        # Abfrageobjekt für TinyDB erstellen
+        Person = Query()
+        # Eintrag in der Datenbank suchen
+        Erg = db.search(Person.firstname == fn and Person.lastname == ln)
+        if Erg:
+            return (Erg)
         else:
-            return {}
+            return None
         
     def __init__(self, person_dict) -> None:
         self.date_of_birth = person_dict["date_of_birth"]
@@ -119,6 +128,8 @@ if __name__ == "__main__":
     db.truncate()
     Person.load_person_data("data/person_db.json")
     Person.load_person_data("data/personstest.csv")
+    print(Person.get_person_list(db))
+    print(Person.find_person_data_by_name("Wannenmacher, Tobias"))
 
 
     """
