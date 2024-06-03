@@ -124,12 +124,14 @@ class Person:
             print("ID not found")
 
 if __name__ == "__main__":
-    db = TinyDB("todo_db.json")
+    db = TinyDB("data/PersonsDatabase.json")
     db.truncate()
     Person.load_person_data("data/person_db.json")
     Person.load_person_data("data/personstest.csv")
     print(Person.get_person_list(db))
     print(Person.find_person_data_by_name("Wannenmacher, Tobias"))
+    Person1 = Person(db.get(doc_id=1))
+    print(Person1.maxHR)
 
 
     """
