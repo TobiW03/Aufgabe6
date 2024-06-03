@@ -43,9 +43,12 @@ if selected_page == "BMI-Rechner":
         pass
     st.write("Der BMI wird nach folgender Formel berechnet: Gewicht in kg / (Größe in m)²")
     st.header("BMI-Klassifikation")
-    st.write(pd.DataFrame({
+    df = pd.DataFrame({
         "BMI": ["< 18.5", "18.5 - 24.9", "25 - 29.9", "30 - 34.9", "35 - 39.9", "≥ 40"],
         "Gewichtsklasse": ["Untergewicht", "Normalgewicht", "Übergewicht", "Adipositas Grad I", "Adipositas Grad II", "Adipositas Grad III"]
-    }))
+    })
+    df = df.set_index("BMI")
+    st.write(df)
+
     
 
