@@ -1,22 +1,57 @@
 import json
 from datetime import datetime
+from tinydb import TinyDB, Query
+import os
+import csv
+
 
 class Person:
     @staticmethod
-    def load_person_data():
+    def load_person_data(file_path):
         """A Function that knows where the person Database is and returns a Dictionary with the Persons"""
-        file = open("data/person_db.json")
-        person_data = json.load(file)
-        return person_data
+        def check_keys(d):
+            """A Function that checks if the Dictionary has the required keys"""
+            required_keys = {"firstname", "lastname", "date_of_birth", "id", "ekg_tests", "picture_path"}
+            return required_keys.issubset(d.keys())
+        def detect_file_type(file_path):
+            """A Function that detects the file type of a file"""
+            _, file_extension = os.path.splitext(file_path)
+            return file_extension.lower()
+
+        file_extension = detect_file_type(file_path)
+
+        if file_extension == ".json":
+            file = open(file_path)
+            person_data = json.load(file)
+            for element in person_data:
+                if not check_keys(element):
+                    print("Error: The JSON file does not have the required keys")
+                    return
+                else:
+                    db.insert(element)
+        elif file_extension == ".csv":
+            with open(file_path, mode='r', newline='') as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    if not check_keys(row):
+                        print("Error: The CSV file does not have the required keys")
+                        return
+                    else:
+                        db.insert(row)
+
+        else:
+            print("Bis jetzt nur json")
 
     @staticmethod
     def get_person_list(person_data):
-        """A Function that takes the persons-dictionary and returns a list auf all person names"""
+
+        """"
+        A Function that takes the persons-dictionary and returns a list auf all person names
         list_of_names = []
 
         for eintrag in person_data:
             list_of_names.append(eintrag["lastname"] + ", " +  eintrag["firstname"])
-        return list_of_names
+        return list_of_names"""
     
     @staticmethod
     def find_person_data_by_name(suchstring):
@@ -80,6 +115,13 @@ class Person:
             print("ID not found")
 
 if __name__ == "__main__":
+    db = TinyDB("todo_db.json")
+    db.truncate()
+    Person.load_person_data("data/person_db.json")
+    Person.load_person_data("data/personstest.csv")
+
+
+    """
     print("This is a module with some functions to read the person data")
     persons = Person.load_person_data()
     person_names = Person.get_person_list(persons)
@@ -89,4 +131,4 @@ if __name__ == "__main__":
     Person3 = Person(persons[2])
     #print(Person.find_person_data_by_name("Huber, Julian"))
     person_instances = [Person1, Person2, Person3]
-    Person.load_by_id(3, person_instances)
+    Person.load_by_id(3, person_instances)"""
