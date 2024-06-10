@@ -28,7 +28,15 @@ class Person:
                     print("Error: The JSON file does not have the required keys")
                     return
                 else:
-                    db.insert(element)
+                    IDCheck = Query()
+                    user_id = element["id"]
+                    result = db.search(IDCheck.id == user_id)
+                    if result:
+                        print("Error: The ID already exists in the database")
+                        continue
+                    else:
+                        db.insert(element)
+
         elif file_extension == ".csv":
             with open(file_path, mode='r', newline='') as file:
                 reader = csv.DictReader(file)
@@ -37,10 +45,16 @@ class Person:
                         print("Error: The CSV file does not have the required keys")
                         return
                     else:
-                        db.insert(row)
-
+                        IDCheck = Query()
+                        user_id = row["id"]
+                        result = db.search(IDCheck.id == user_id)
+                        if result:
+                            print("Error: The ID already exists in the database")
+                            continue
+                        else:
+                            db.insert(row)
         else:
-            print("Bis jetzt nur json")
+            print("Bis jetzt nur json und csv Dateien unterstützt")
 
     @staticmethod
     def add_user(firstname, lastname, date_of_birth, id, ekg_tests, picture_path):
@@ -132,7 +146,6 @@ if __name__ == "__main__":
     print(Person.find_person_data_by_name("Wannenmacher, Tobias"))
     Person1 = Person(db.get(doc_id=1))
     print(Person1.maxHR)
-
 
     """
     print("This is a module with some functions to read the person data")
