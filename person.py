@@ -122,30 +122,37 @@ class Person:
         self.trainingsdiary = self.diary()
 
     def diary(self):
-        self.dfdiary = pd.DataFrame({
-        "Wochentag": ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"],
-        "Sportart": [None, None, None, None, None, None, None],
-        "Ort": [None, None, None, None, None, None, None],
-        "Dauer": [None, None, None, None, None, None, None],
-        "Kalorienverbrauch": [None, None, None, None, None, None, None],
-        "Wetter": [None, None, None, None, None, None, None],
-        "PartnerIn": [None, None, None, None, None, None, None],
-        })
-        self.dfdiary = self.dfdiary.set_index("Wochentag")
-
         for eintrag in db:
-            print(eintrag['id'])
+            if eintrag["id"] == self.id:
+                if eintrag["diary"] == []: #Wenn das Trainingstagebuch leer ist
+                    self.dfdiary = pd.DataFrame({
+                    "Wochentag": ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"],
+                    "Sportart": [None, None, None, None, None, None, None],
+                    "Ort": [None, None, None, None, None, None, None],
+                    "Dauer": [None, None, None, None, None, None, None],
+                    "Kalorienverbrauch": [None, None, None, None, None, None, None],
+                    "Wetter": [None, None, None, None, None, None, None],
+                    "PartnerIn": [None, None, None, None, None, None, None],
+                    })
+                    self.dfdiary = self.dfdiary.set_index("Wochentag")
+                else:
+                    self.dfdiary = pd.DataFrame(eintrag["diary"])
+                    #self.dfdiary = self.dfdiary.set_index("Wochentag")
+            else:
+                print("Person nicht gefunden")
+
+        #Speichern
+        for eintrag in db:
             if eintrag.get('id') == self.id:
-                print(self.id)
                 # Neuen Wert hinzufügen oder vorhandenen Wert aktualisieren
                 data_dict = self.dfdiary.to_dict()
                 eintrag['diary'] = data_dict
-                # Eintrag aktualisieren
+                # Eintrag aktualisieren                    
                 db.update(eintrag, doc_ids=[eintrag.doc_id])
                 break
             else:
                 print("Person nicht gefunden")
-
+        print(self.dfdiary)
         return self.dfdiary
 
     def calc_age(self):
@@ -178,12 +185,12 @@ class Person:
 
 if __name__ == "__main__":
     db = TinyDB("data/PersonsDatabase.json")
-    db.truncate()
+    #db.truncate()
     Person.load_person_data("data/person_db.json")
     Person.load_person_data("data/personstest.csv")
     #print(Person.get_person_list(db))
     #print(Person.find_person_data_by_name("Wannenmacher, Tobias"))
-    Person1 = Person(db.get(doc_id=2))
+    Person1 = Person(db.get(doc_id=1))
     #print(Person1.maxHR)
     db.close()
     """
