@@ -119,7 +119,7 @@ class Person:
         self.maxHR = self.calc_max_heart_rate()
         self.ecg_data = person_dict["ekg_tests"]
         self.ecg_result_link = person_dict["ekg_tests"][0]["result_link"]
-        #self.trainingsdiary = self.diary()
+        self.trainingsdiary = self.diary()
 
     def diary(self):
         self.dfdiary = pd.DataFrame({
@@ -133,16 +133,15 @@ class Person:
         })
         self.dfdiary = self.dfdiary.set_index("Wochentag")
 
-        found_entry = False
         for eintrag in db:
             print(eintrag['id'])
             if eintrag.get('id') == self.id:
                 print(self.id)
                 # Neuen Wert hinzufügen oder vorhandenen Wert aktualisieren
-                eintrag['diary'] = self.dfdiary
+                data_dict = self.dfdiary.to_dict()
+                eintrag['diary'] = data_dict
                 # Eintrag aktualisieren
                 db.update(eintrag, doc_ids=[eintrag.doc_id])
-                found_entry = True
                 break
             else:
                 print("Person nicht gefunden")

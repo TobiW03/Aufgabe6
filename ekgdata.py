@@ -39,7 +39,7 @@ class EKGdata:
         self.estimated_hr_list = []
         peaks_times = self.df['Time in ms'][self.peaks]
         for i in range(1, len(peaks_times)):
-            difference = (peaks_times.iloc[i] - peaks_times.iloc[i-1]) / 500 * 60
+            difference = 60 /((peaks_times.iloc[i] - peaks_times.iloc[i-1]) / 1000 )
             self.estimated_hr_list.append(difference)
         self.estimated_hr = sum(self.estimated_hr_list) / len(self.estimated_hr_list)
 
