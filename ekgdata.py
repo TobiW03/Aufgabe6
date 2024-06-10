@@ -105,3 +105,4 @@ if __name__ == "__main__":
     EKGdata.load_ekg_data("data/person_db.json")
     first_entry = dbecg.all()[0]
     EKG1 = EKGdata(first_entry)
+    print(EKG1.estimated_hr)

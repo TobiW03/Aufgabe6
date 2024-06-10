@@ -3,6 +3,7 @@ from datetime import datetime
 from tinydb import TinyDB, Query
 import os
 import csv
+import pandas as pd
 
 
 class Person:
@@ -28,6 +29,7 @@ class Person:
                     print("Error: The JSON file does not have the required keys")
                     return
                 else:
+                    #Trainingstagebuch einfügen
                     IDCheck = Query()
                     user_id = element["id"]
                     result = db.search(IDCheck.id == user_id)
@@ -35,7 +37,11 @@ class Person:
                         print("Error: The ID already exists in the database")
                         continue
                     else:
-                        db.insert(element)
+                        if 'diary' not in element:
+                            element['diary'] = []
+                            db.insert(element)
+                        else:
+                            db.insert(element)
 
         elif file_extension == ".csv":
             with open(file_path, mode='r', newline='') as file:
@@ -45,6 +51,7 @@ class Person:
                         print("Error: The CSV file does not have the required keys")
                         return
                     else:
+                        "Trainingstagebuch einfügen"
                         IDCheck = Query()
                         user_id = row["id"]
                         result = db.search(IDCheck.id == user_id)
@@ -52,7 +59,11 @@ class Person:
                             print("Error: The ID already exists in the database")
                             continue
                         else:
-                            db.insert(row)
+                            if 'diary' not in row or row['diary'] == "":
+                                row['diary'] = []
+                                db.insert(row)
+                            else:
+                                db.insert(row)
         else:
             print("Bis jetzt nur json und csv Dateien unterstützt")
 
@@ -108,6 +119,35 @@ class Person:
         self.maxHR = self.calc_max_heart_rate()
         self.ecg_data = person_dict["ekg_tests"]
         self.ecg_result_link = person_dict["ekg_tests"][0]["result_link"]
+        #self.trainingsdiary = self.diary()
+
+    def diary(self):
+        self.dfdiary = pd.DataFrame({
+        "Wochentag": ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"],
+        "Sportart": [None, None, None, None, None, None, None],
+        "Ort": [None, None, None, None, None, None, None],
+        "Dauer": [None, None, None, None, None, None, None],
+        "Kalorienverbrauch": [None, None, None, None, None, None, None],
+        "Wetter": [None, None, None, None, None, None, None],
+        "PartnerIn": [None, None, None, None, None, None, None],
+        })
+        self.dfdiary = self.dfdiary.set_index("Wochentag")
+
+        found_entry = False
+        for eintrag in db:
+            print(eintrag['id'])
+            if eintrag.get('id') == self.id:
+                print(self.id)
+                # Neuen Wert hinzufügen oder vorhandenen Wert aktualisieren
+                eintrag['diary'] = self.dfdiary
+                # Eintrag aktualisieren
+                db.update(eintrag, doc_ids=[eintrag.doc_id])
+                found_entry = True
+                break
+            else:
+                print("Person nicht gefunden")
+
+        return self.dfdiary
 
     def calc_age(self):
         date = datetime.now()
@@ -142,11 +182,11 @@ if __name__ == "__main__":
     db.truncate()
     Person.load_person_data("data/person_db.json")
     Person.load_person_data("data/personstest.csv")
-    print(Person.get_person_list(db))
-    print(Person.find_person_data_by_name("Wannenmacher, Tobias"))
-    Person1 = Person(db.get(doc_id=1))
-    print(Person1.maxHR)
-
+    #print(Person.get_person_list(db))
+    #print(Person.find_person_data_by_name("Wannenmacher, Tobias"))
+    Person1 = Person(db.get(doc_id=2))
+    #print(Person1.maxHR)
+    db.close()
     """
     print("This is a module with some functions to read the person data")
     persons = Person.load_person_data()
