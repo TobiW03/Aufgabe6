@@ -42,6 +42,16 @@ class EKGdata:
             difference = (peaks_times.iloc[i] - peaks_times.iloc[i-1]) / 500 * 60
             self.estimated_hr_list.append(difference)
         self.estimated_hr = sum(self.estimated_hr_list) / len(self.estimated_hr_list)
+
+        # Rolling Mean
+        # Umwandeln der Liste in eine Pandas Serie
+        self.seriestest = pd.Series(self.estimated_hr_list)
+        # Berechnung des gleitenden Mittelwerts mit einem Fenster von 25
+        self.rolling_mean = self.seriestest.rolling(window=25).mean()
+
+        print(len(self.rolling_mean))
+        print(len(self.estimated_hr_list))
+
         return self.estimated_hr
 
     def plot_time_series(self):
@@ -50,8 +60,15 @@ class EKGdata:
         time_values_s = time_values_ms / 1000
         self.fig.add_trace(go.Scatter(x=time_values_s, y=self.df['EKG in mV'], mode='lines', name='EKG Signal', yaxis='y1'))
         self.fig.add_trace(go.Scatter(x=time_values_s[self.peaks], y=self.df['EKG in mV'][self.peaks], mode='markers', name='Peaks', marker=dict(color='red', size=10, symbol='x'), yaxis='y1'))
-        self.fig.add_trace(go.Scatter(x=time_values_s, y=self.df['Gleitender Mittelwert'], mode='lines', name='Gleitender Mittelwert', yaxis='y1'))
-        self.fig.add_trace(go.Scatter(x=time_values_s[self.peaks], y=self.estimated_hr_list, mode='lines', name='Estimated Heartrate', yaxis='y2'))
+
+        # Berechnung des Mittelwerts und der dazugehörigen Zeitstempel für den Plot
+        hr_time_values = time_values_s[self.peaks][1:]  # Zeitstempel der HR Werte
+        self.fig.add_trace(go.Scatter(x=hr_time_values, y=self.estimated_hr_list, mode='lines', name='Estimated Heartrate', yaxis='y2'))
+
+        # Berechnung des gleitenden Mittelwerts und der dazugehörigen Zeitstempel für den Plot
+        valid_rolling_mean = self.rolling_mean.dropna()
+        rolling_hr_time_values = hr_time_values[:len(valid_rolling_mean)]  # Zeitstempel für den gleitenden Mittelwert
+        self.fig.add_trace(go.Scatter(x=rolling_hr_time_values, y=valid_rolling_mean, mode='lines', name='Estimated rolling Heartrate', yaxis='y2'))
 
         initial_zoom_start = 0
         initial_zoom_end = 10  # in Sekunden
@@ -88,4 +105,3 @@ if __name__ == "__main__":
     EKGdata.load_ekg_data("data/person_db.json")
     first_entry = dbecg.all()[0]
     EKG1 = EKGdata(first_entry)
-    EKG1.fig.show()
