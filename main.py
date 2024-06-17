@@ -63,6 +63,7 @@ if selected_page == "Trainingstagebuch":
     import pandas as pd
     import pickle
     import os
+    st.title("Trainingstagebuch")
 
     # Funktion zum Erstellen des Standard-DataFrames
     def create_default_dataframe():
