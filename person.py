@@ -152,7 +152,6 @@ class Person:
                 break
             else:
                 print("Person nicht gefunden")
-        print(self.dfdiary)
         return self.dfdiary
 
     def calc_age(self):

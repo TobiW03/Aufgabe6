@@ -10,7 +10,7 @@ with st.sidebar:
     selected_page = som.option_menu("Navigation", ["Home", "Benutzer auswählen", "Neuen Benutzer hinzufügen", "Neues EKG hinzufügen", "BMI-Rechner", "Trainingstagebuch"])
 
 if selected_page == "Home":
-    st.title("Fitnessapp")
+    st.title("VitalVibes")
     st.write("Sie befinden sich auf der Startseite der Fitnessapp.")
     st.image("Running.jpg")
     
