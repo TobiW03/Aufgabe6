@@ -2,9 +2,27 @@ import streamlit as st
 import streamlit_option_menu as som
 import pandas as pd
 import pickle, person, BMI, Home
+from tinydb import TinyDB, Query
+import person
+import os
+
+
+
+@st.cache(allow_output_mutation=True)
+def load_data():
+    db = TinyDB("data/PersonsDatabase.json")
+    db.truncate()
+    person.Person.load_person_data(db,"data/person_db.json")
+    person.Person.load_person_data(db,"data/personstest.csv")
+    return db
+
+db = load_data()
+#print(person.Person.find_person_data_by_id(db,5))
+#print(person.Person.find_person_data_by_id(db,4))
+
 
 with st.sidebar:
-    selected_page = som.option_menu("Navigation", ["Home", "Benutzer auswählen", "Neuen Benutzer hinzufügen", "Neues EKG hinzufügen", "BMI-Rechner", "Trainingstagebuch"])
+    selected_page = som.option_menu("Navigation", ["Home", "Benutzer auswählen", "Benutzer bearbeiten", "Neues EKG hinzufügen", "BMI-Rechner", "Trainingstagebuch"])
 
 if selected_page == "Home":
     Home.home()
@@ -13,9 +31,98 @@ if selected_page == "Benutzer auswählen":
     st.title("Benutzer auswählen")
     st.write("This is the second page of my app.")
 
-if selected_page == "Neuen Benutzer hinzufügen":
-    st.title("Neuen Benutzer hinzufügen")
-    st.write("This is the third page of my app.")
+if selected_page == "Benutzer bearbeiten":
+    AddDelUp = st.selectbox('Wähle eine Option aus:', ['Benutzer hinzufügen', 'Benutzer löschen', 'Benutzer bearbeiten'])
+    
+    if AddDelUp == 'Benutzer hinzufügen':
+        st.title("Benutzer hinzufügen")
+
+        col1,col2,col3 = st.columns(3)
+        with col1:
+            NewUserID = 1
+            for entry in db:
+                if NewUserID == entry['id']:
+                    NewUserID += 1
+            st.markdown(("ID: ",NewUserID))
+            LabelYear = st.text_input("Geburtsjahr: ")
+        with col2:
+            LabelFirstname = st.text_input("Vorname: ")
+            EKGUpload = st.file_uploader("EKG Datei hochladen: ",type=['csv'])
+        with col3:
+            LabelLastname = st.text_input("Nachname: ")
+            PictureUpload = st.file_uploader("Bild Datei hochladen: ",type=['jpg','png','jpeg'])
+
+        if st.button("Benutzer hinzufügen"):
+            if LabelYear.strip() and LabelFirstname.strip() and LabelLastname.strip() and EKGUpload and PictureUpload and LabelYear.isnumeric():
+                EKGUploadpath = os.path.join("data/ekg_data",EKGUpload.name)
+                PictureUploadpath = os.path.join("data/pictures",PictureUpload.name)
+                with open(EKGUploadpath, 'wb') as f:
+                    f.write(EKGUpload.getbuffer())
+                with open(PictureUploadpath, 'wb') as f:
+                    f.write(PictureUpload.getbuffer())
+                person.Person.add_user(db,LabelFirstname,LabelLastname,LabelYear,NewUserID,EKGUploadpath,PictureUploadpath)
+                st.write("Benutzer wurde hinzugefügt")
+            else:
+                st.write("Bitte alle Felder ausfüllen und Eingaben überprüfen")  
+        
+
+
+
+
+    if AddDelUp == 'Benutzer löschen':
+        FeldID = st.text_input("ID")
+        if type(FeldID) == str and FeldID.isnumeric():
+            Daten = person.Person.find_person_data_by_id(db,int(FeldID))
+            try:
+                st.image(Daten[0]['picture_path'], caption='Ausgewählter User', use_column_width=True)
+            except:
+                st.image('data/pictures/none.jpg', caption='Kein Bild vorhanden', use_column_width=True)
+            if st.button("Benutzer entfernen"):
+                person.Person.del_user(db,int(FeldID))
+                st.write("Benutzer wurde gelöscht")
+            if Daten == None:
+                st.write("ID nicht gefunden")
+
+
+
+
+
+
+
+    if AddDelUp == 'Benutzer bearbeiten':
+        st.title("Benutzer bearbeiten")
+
+
+
+    
+    
+
+
+
+    
+    
+    
+    """
+    col1,col2,col3 = st.columns(3)
+    with col1:
+        image_path = 'data/pictures/none.jpg'
+        st.image(image_path, caption='User', use_column_width=True)
+    with col2:
+        FeldID = st.text_input("ID")
+    with col3:
+        def button1_action():
+            st.write("Button 1 wurde gedrückt!")
+        def button2_action():
+            st.write("Button 2 wurde gedrückt!")
+        def button3_action():
+            st.write("Button 3 wurde gedrückt!")
+
+        if st.button("Benutzer hinzufügen"):
+            button1_action()
+        if st.button("Benutzer löschen"):
+            button2_action()
+        if st.button("Benutzer bearbeiten"):
+            button3_action()"""
 
 if selected_page == "Neues EKG hinzufügen":
     st.title("Neues EKG hinzufügen")

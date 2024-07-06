@@ -5,10 +5,9 @@ import os
 import csv
 import pandas as pd
 
-
 class Person:
     @staticmethod
-    def load_person_data(file_path):
+    def load_person_data(database,file_path):
         """A Function that knows where the person Database is and returns a Dictionary with the Persons"""
         def check_keys(d):
             """A Function that checks if the Dictionary has the required keys"""
@@ -18,7 +17,6 @@ class Person:
             """A Function that detects the file type of a file"""
             _, file_extension = os.path.splitext(file_path)
             return file_extension.lower()
-
         file_extension = detect_file_type(file_path)
 
         if file_extension == ".json":
@@ -32,7 +30,7 @@ class Person:
                     #Trainingstagebuch einfügen
                     IDCheck = Query()
                     user_id = element["id"]
-                    result = db.search(IDCheck.id == user_id)
+                    result = database.search(IDCheck.id == user_id)
                     if result:
                         print("Error: The ID already exists in the database")
                         continue
@@ -49,9 +47,9 @@ class Person:
                             })
                             element['diary'] = element['diary'].set_index("Wochentag")
                             element['diary'] = element['diary'].to_dict()
-                            db.insert(element)
+                            database.insert(element)
                         else:
-                            db.insert(element)
+                            database.insert(element)
 
         elif file_extension == ".csv":
             with open(file_path, mode='r', newline='') as file:
@@ -64,11 +62,13 @@ class Person:
                         "Trainingstagebuch einfügen"
                         IDCheck = Query()
                         user_id = row["id"]
-                        result = db.search(IDCheck.id == user_id)
+                        result = database.search(IDCheck.id == user_id)
                         if result:
                             print("Error: The ID already exists in the database")
                             continue
                         else:
+                            if type(row['id']) == str:
+                                row['id'] = int(row['id'])
                             if 'diary' not in row or row['diary'] == "":
                                 row['diary'] = pd.DataFrame({
                                 "Wochentag": ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"],
@@ -81,14 +81,14 @@ class Person:
                                 })
                                 row['diary'] = row['diary'].set_index("Wochentag")
                                 row['diary'] = row['diary'].to_dict()
-                                db.insert(row)
+                                database.insert(row)
                             else:
-                                db.insert(row)
+                                database.insert(row)
         else:
             print("Bis jetzt nur json und csv Dateien unterstützt")
 
     @staticmethod
-    def add_user(firstname, lastname, date_of_birth, id, ekg_tests, picture_path): #updaten
+    def add_user(database,firstname, lastname, date_of_birth, id, ekg_tests, picture_path): #updaten
         """A Function that adds a new user to the person database"""
         data = {"firstname": firstname, 
                 "lastname": lastname, 
@@ -107,12 +107,12 @@ class Person:
                                 })}
         data['diary'] = data['diary'].set_index("Wochentag")
         data['diary'] = data['diary'].to_dict()
-        db.insert(data)
+        database.insert(data)
     
     @staticmethod
-    def del_user(id): #updaten
+    def del_user(database,id): #updaten
         """A Function that deletes a user from the person database"""
-        db.remove(doc_ids=[id])
+        database.remove(doc_ids=[id])
 
     @staticmethod
     def update_user(id, firstname, lastname, date_of_birth, ekg_tests, picture_path):
@@ -159,13 +159,13 @@ class Person:
             return None
         
     @staticmethod
-    def find_person_data_by_id(id):
+    def find_person_data_by_id(database,id):
         """ Eine Funktion der die ID übergeben wird
         und die die Person als Dictionary zurück gibt"""
         # Abfrageobjekt für TinyDB erstellen
         Person = Query()
         # Eintrag in der Datenbank suchen
-        Erg = db.search(Person.id == id)
+        Erg = database.search(Person.id == id)
         if Erg:
             return (Erg)
         else:
@@ -266,15 +266,14 @@ class Person:
 if __name__ == "__main__":
     db = TinyDB("data/PersonsDatabase.json")
     db.truncate()
-    Person.load_person_data("data/person_db.json")
-    Person.load_person_data("data/personstest.csv")
+    Person.load_person_data(db,"data/person_db.json")
+    Person.load_person_data(db,"data/personstest.csv")
     print(Person.get_person_list(db))
     print(Person.find_person_data_by_name("Huber, Julian"))
-    print(Person.find_person_data_by_id(3))
+    print(Person.find_person_data_by_id(db,3))
     #Person1 = Person(db.get(doc_id=1))
     #print(Person1.maxHR)
     db.close()
-
     """
     print("This is a module with some functions to read the person data")
     persons = Person.load_person_data()
