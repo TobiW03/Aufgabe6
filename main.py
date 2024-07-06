@@ -5,8 +5,7 @@ import pickle, person, BMI, Home
 from tinydb import TinyDB, Query
 import person
 import os
-
-
+from datetime import datetime
 
 @st.cache(allow_output_mutation=True)
 def load_data():
@@ -56,11 +55,28 @@ if selected_page == "Benutzer bearbeiten":
             if LabelYear.strip() and LabelFirstname.strip() and LabelLastname.strip() and EKGUpload and PictureUpload and LabelYear.isnumeric():
                 EKGUploadpath = os.path.join("data/ekg_data",EKGUpload.name)
                 PictureUploadpath = os.path.join("data/pictures",PictureUpload.name)
+
+                NewECGID = 1
+                for user in db:
+                    print(user['ekg_tests'])
+                    for ecgtest in user['ekg_tests']:
+                        if NewECGID == ecgtest['id']:
+                            print(ecgtest['id'])
+                            NewECGID += 1
+                
+                heute = datetime.today()
+                datum_format = heute.strftime("%d-%m-%Y")
+
+                EKGInfo = [{
+                    "id":NewECGID,
+                    "date":datum_format,
+                    "result_link":EKGUploadpath}]
+
                 with open(EKGUploadpath, 'wb') as f:
                     f.write(EKGUpload.getbuffer())
                 with open(PictureUploadpath, 'wb') as f:
                     f.write(PictureUpload.getbuffer())
-                person.Person.add_user(db,LabelFirstname,LabelLastname,LabelYear,NewUserID,EKGUploadpath,PictureUploadpath)
+                person.Person.add_user(db,LabelFirstname,LabelLastname,LabelYear,NewUserID,EKGInfo,PictureUploadpath)
                 st.write("Benutzer wurde hinzugefügt")
             else:
                 st.write("Bitte alle Felder ausfüllen und Eingaben überprüfen")  
@@ -80,6 +96,9 @@ if selected_page == "Benutzer bearbeiten":
             if st.button("Benutzer entfernen"):
                 person.Person.del_user(db,int(FeldID))
                 st.write("Benutzer wurde gelöscht")
+                os.remove(Daten[0]['picture_path'])
+                for ekg in Daten[0]['ekg_tests']:
+                    os.remove(ekg["result_link"])
             if Daten == None:
                 st.write("ID nicht gefunden")
 

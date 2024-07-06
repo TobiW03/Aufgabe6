@@ -4,6 +4,7 @@ from tinydb import TinyDB, Query
 import os
 import csv
 import pandas as pd
+import ast
 
 class Person:
     @staticmethod
@@ -11,7 +12,7 @@ class Person:
         """A Function that knows where the person Database is and returns a Dictionary with the Persons"""
         def check_keys(d):
             """A Function that checks if the Dictionary has the required keys"""
-            required_keys = {"firstname", "lastname", "date_of_birth", "id", "ekg_tests", "picture_path"}
+            required_keys = {"firstname", "lastname", "date_of_birth", "id", "picture_path"}
             return required_keys.issubset(d.keys())
         def detect_file_type(file_path):
             """A Function that detects the file type of a file"""
@@ -52,13 +53,23 @@ class Person:
                             database.insert(element)
 
         elif file_extension == ".csv":
-            with open(file_path, mode='r', newline='') as file:
+            with open(file_path, mode='r', newline='',encoding='utf-8') as file:
                 reader = csv.DictReader(file)
                 for row in reader:
+                    print(row)
                     if not check_keys(row):
                         print("Error: The CSV file does not have the required keys")
                         return
                     else:
+
+                        row["ekg_tests"] = [{
+                            'id': int(row["ecg_id"]), 
+                            'date': row["date"], 
+                            'result_link': row["result_link"]}]
+                        row.pop("ecg_id", None)
+                        row.pop("date", None)
+                        row.pop("result_link", None)
+
                         "Trainingstagebuch einfügen"
                         IDCheck = Query()
                         user_id = row["id"]
@@ -268,9 +279,9 @@ if __name__ == "__main__":
     db.truncate()
     Person.load_person_data(db,"data/person_db.json")
     Person.load_person_data(db,"data/personstest.csv")
-    print(Person.get_person_list(db))
-    print(Person.find_person_data_by_name("Huber, Julian"))
-    print(Person.find_person_data_by_id(db,3))
+    #print(Person.get_person_list(db))
+    #print(Person.find_person_data_by_name("Huber, Julian"))
+    #print(Person.find_person_data_by_id(db,3))
     #Person1 = Person(db.get(doc_id=1))
     #print(Person1.maxHR)
     db.close()
