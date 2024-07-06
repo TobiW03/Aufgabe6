@@ -4,6 +4,7 @@ import pandas as pd
 import pickle
 import os
 import test
+import person
 
 
 with st.sidebar:
@@ -93,7 +94,7 @@ if selected_page == "Trainingstagebuch":
             pickle.dump(df, file)
 
     # Beispiel-Benutzerliste
-    user_list = ["Benutzer1", "Benutzer2", "Benutzer3"]
+    user_list = person.Person.get_person_list(db)
 
     # Benutzer-ID auswählen
     user_id = st.selectbox("Benutzer auswählen", user_list)

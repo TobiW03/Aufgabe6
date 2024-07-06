@@ -108,20 +108,9 @@ class Person:
             return (Erg)
         else:
             return None
-        
-    def __init__(self, person_dict) -> None:
-        self.date_of_birth = person_dict["date_of_birth"]
-        self.firstname = person_dict["firstname"]
-        self.lastname = person_dict["lastname"]
-        self.picture_path = person_dict["picture_path"]
-        self.id = person_dict["id"]
-        self.age = self.calc_age()
-        self.maxHR = self.calc_max_heart_rate()
-        self.ecg_data = person_dict["ekg_tests"]
-        self.ecg_result_link = person_dict["ekg_tests"][0]["result_link"]
-        self.trainingsdiary = self.diary()
-
+    ### Sporttagebuch
     def diary(self):
+        """Funktion zum Erstellen des Standard-DataFrames d. Sporttagebuchs"""
         for eintrag in db:
             if eintrag["id"] == self.id:
                 if eintrag["diary"] == []: #Wenn das Trainingstagebuch leer ist
@@ -140,6 +129,35 @@ class Person:
                     #self.dfdiary = self.dfdiary.set_index("Wochentag")
             else:
                 print("Person nicht gefunden")
+    
+    #unklar, ob Funktion noch benötigt wird
+    def load_dataframe(self,user_id):
+        """Funktion zum Laden des DataFrames aus einer Datei"""
+        filename = f"{user_id}_edited_df.pkl"
+        if os.path.exists(filename):
+            with open(filename, "rb") as file:
+                return pickle.load(file)
+        else:
+            return create_default_dataframe()
+
+    def save_dataframe(df, user_id):
+        """Funktion zum Speichern des DataFrames in einer Datei"""
+        filename = f"{user_id}_edited_df.pkl"
+        with open(filename, "wb") as file:
+            pickle.dump(df, file)
+    
+        
+    def __init__(self, person_dict) -> None:
+        self.date_of_birth = person_dict["date_of_birth"]
+        self.firstname = person_dict["firstname"]
+        self.lastname = person_dict["lastname"]
+        self.picture_path = person_dict["picture_path"]
+        self.id = person_dict["id"]
+        self.age = self.calc_age()
+        self.maxHR = self.calc_max_heart_rate()
+        self.ecg_data = person_dict["ekg_tests"]
+        self.ecg_result_link = person_dict["ekg_tests"][0]["result_link"]
+        self.trainingsdiary = self.diary()
 
         #Speichern
         for eintrag in db:
@@ -187,10 +205,17 @@ if __name__ == "__main__":
     #db.truncate()
     Person.load_person_data("data/person_db.json")
     Person.load_person_data("data/personstest.csv")
-    #print(Person.get_person_list(db))
-    #print(Person.find_person_data_by_name("Wannenmacher, Tobias"))
-    Person1 = Person(db.get(doc_id=1))
+    print(Person.get_person_list(db))
+    print(Person.find_person_data_by_name("Huber, Julian"))
+    #Person1 = Person(db.get(doc_id=1))
     #print(Person1.maxHR)
+
+    Person = Query()
+    # Eintrag in der Datenbank suchen
+    Erg = db.search(Person.id == 1)
+
+
+
     db.close()
     """
     print("This is a module with some functions to read the person data")
