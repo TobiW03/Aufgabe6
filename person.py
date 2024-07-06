@@ -38,7 +38,17 @@ class Person:
                         continue
                     else:
                         if 'diary' not in element:
-                            element['diary'] = []
+                            element['diary'] = pd.DataFrame({
+                            "Wochentag": ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"],
+                            "Sportart": [None, None, None, None, None, None, None],
+                            "Ort": [None, None, None, None, None, None, None],
+                            "Dauer": [None, None, None, None, None, None, None],
+                            "Kalorienverbrauch": [None, None, None, None, None, None, None],
+                            "Wetter": [None, None, None, None, None, None, None],
+                            "PartnerIn": [None, None, None, None, None, None, None],
+                            })
+                            element['diary'] = element['diary'].set_index("Wochentag")
+                            element['diary'] = element['diary'].to_dict()
                             db.insert(element)
                         else:
                             db.insert(element)
@@ -60,7 +70,17 @@ class Person:
                             continue
                         else:
                             if 'diary' not in row or row['diary'] == "":
-                                row['diary'] = []
+                                row['diary'] = pd.DataFrame({
+                                "Wochentag": ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"],
+                                "Sportart": [None, None, None, None, None, None, None],
+                                "Ort": [None, None, None, None, None, None, None],
+                                "Dauer": [None, None, None, None, None, None, None],
+                                "Kalorienverbrauch": [None, None, None, None, None, None, None],
+                                "Wetter": [None, None, None, None, None, None, None],
+                                "PartnerIn": [None, None, None, None, None, None, None],
+                                })
+                                row['diary'] = row['diary'].set_index("Wochentag")
+                                row['diary'] = row['diary'].to_dict()
                                 db.insert(row)
                             else:
                                 db.insert(row)
@@ -68,20 +88,49 @@ class Person:
             print("Bis jetzt nur json und csv Dateien unterstützt")
 
     @staticmethod
-    def add_user(firstname, lastname, date_of_birth, id, ekg_tests, picture_path):
+    def add_user(firstname, lastname, date_of_birth, id, ekg_tests, picture_path): #updaten
         """A Function that adds a new user to the person database"""
         data = {"firstname": firstname, 
                 "lastname": lastname, 
-                "date_of_birth": date_of_birth,
-                "id": id,
-                "ekg_tests": ekg_tests,
-                "picture_path": picture_path}
+                "id": id, 
+                "date_of_birth": date_of_birth, 
+                "picture_path": picture_path, 
+                "ekg_tests": ekg_tests, 
+                "diary": pd.DataFrame({
+                                "Wochentag": ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"],
+                                "Sportart": [None, None, None, None, None, None, None],
+                                "Ort": [None, None, None, None, None, None, None],
+                                "Dauer": [None, None, None, None, None, None, None],
+                                "Kalorienverbrauch": [None, None, None, None, None, None, None],
+                                "Wetter": [None, None, None, None, None, None, None],
+                                "PartnerIn": [None, None, None, None, None, None, None],
+                                })}
+        data['diary'] = data['diary'].set_index("Wochentag")
+        data['diary'] = data['diary'].to_dict()
         db.insert(data)
     
     @staticmethod
-    def del_user(id):
+    def del_user(id): #updaten
         """A Function that deletes a user from the person database"""
         db.remove(doc_ids=[id])
+
+    @staticmethod
+    def update_user(id, firstname, lastname, date_of_birth, ekg_tests, picture_path):
+        """A Function that updates a user in the person database"""
+        # Abfrageobjekt für TinyDB erstellen
+        Person = Query()
+        # Eintrag in der Datenbank suchen
+        Erg = db.search(Person.id == id)
+        if Erg:
+            # Eintrag in der Datenbank aktualisieren
+            db.update({"firstname": firstname, 
+                        "lastname": lastname, 
+                        "id": id, 
+                        "date_of_birth": date_of_birth, 
+                        "picture_path": picture_path, 
+                        "ekg_tests": ekg_tests}, Person.id == id)
+        else:
+            print("Person nicht gefunden")
 
     @staticmethod
     def get_person_list(db):
@@ -108,6 +157,20 @@ class Person:
             return (Erg)
         else:
             return None
+        
+    @staticmethod
+    def find_person_data_by_id(id):
+        """ Eine Funktion der die ID übergeben wird
+        und die die Person als Dictionary zurück gibt"""
+        # Abfrageobjekt für TinyDB erstellen
+        Person = Query()
+        # Eintrag in der Datenbank suchen
+        Erg = db.search(Person.id == id)
+        if Erg:
+            return (Erg)
+        else:
+            return None
+
     ### Sporttagebuch
     def diary(self):
         """Funktion zum Erstellen des Standard-DataFrames d. Sporttagebuchs"""
@@ -139,7 +202,7 @@ class Person:
                 return pickle.load(file)
         else:
             return create_default_dataframe()
-
+    #unklar, ob Funktion noch benötigt wird
     def save_dataframe(df, user_id):
         """Funktion zum Speichern des DataFrames in einer Datei"""
         filename = f"{user_id}_edited_df.pkl"
@@ -202,21 +265,16 @@ class Person:
 
 if __name__ == "__main__":
     db = TinyDB("data/PersonsDatabase.json")
-    #db.truncate()
+    db.truncate()
     Person.load_person_data("data/person_db.json")
     Person.load_person_data("data/personstest.csv")
     print(Person.get_person_list(db))
     print(Person.find_person_data_by_name("Huber, Julian"))
+    print(Person.find_person_data_by_id(3))
     #Person1 = Person(db.get(doc_id=1))
     #print(Person1.maxHR)
-
-    Person = Query()
-    # Eintrag in der Datenbank suchen
-    Erg = db.search(Person.id == 1)
-
-
-
     db.close()
+
     """
     print("This is a module with some functions to read the person data")
     persons = Person.load_person_data()
