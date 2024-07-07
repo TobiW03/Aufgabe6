@@ -8,7 +8,7 @@ import json
 
 class EKGdata:
     @staticmethod
-    def load_ekg_data(file_path):
+    def load_ekg_data(databaseecg,file_path):
         def detect_file_type(file_path):
             _, file_extension = os.path.splitext(file_path)
             return file_extension.lower()
@@ -19,7 +19,7 @@ class EKGdata:
             with open(file_path) as file:
                 ekg_data = json.load(file)
                 for element in ekg_data:
-                    dbecg.insert(element["ekg_tests"][0])
+                    databaseecg.insert(element["ekg_tests"][0])
 
     def __init__(self, ekg_dict):
         self.id = ekg_dict["id"]
@@ -81,7 +81,7 @@ class EKGdata:
             showlegend=True,
             xaxis=dict(range=[initial_zoom_start, initial_zoom_end])
         )
-        self.fig.show()
+        #self.fig.show()
         return self.fig
 
     @staticmethod

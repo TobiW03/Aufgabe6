@@ -6,6 +6,8 @@ from tinydb import TinyDB, Query
 import person
 import os
 from datetime import datetime
+import ekgdata
+import Ernährungsberatung
 
 @st.cache(allow_output_mutation=True)
 def load_data():
@@ -13,29 +15,27 @@ def load_data():
     db.truncate()
     person.Person.load_person_data(db,"data/person_db.json")
     person.Person.load_person_data(db,"data/personstest.csv")
-    return db
+    dbecg = TinyDB("data/EKGDatabase.json")
+    dbecg.truncate()
+    ekgdata.EKGdata.load_ekg_data(dbecg,"data/person_db.json")
+    return db,dbecg
 
-db = load_data()
+db,dbecg = load_data()
 #print(person.Person.find_person_data_by_id(db,5))
 #print(person.Person.find_person_data_by_id(db,4))
 
 
 with st.sidebar:
-    selected_page = som.option_menu("Navigation", ["Home", "Benutzer auswählen", "Benutzer bearbeiten", "Neues EKG hinzufügen", "BMI-Rechner", "Trainingstagebuch"])
+    selected_page = som.option_menu("Navigation", ["Home", "Kalorienrechner", "Benutzer bearbeiten", "EKGs", "BMI-Rechner", "Trainingstagebuch"])
 
 if selected_page == "Home":
     Home.home()
-    
-if selected_page == "Benutzer auswählen":
-    st.title("Benutzer auswählen")
-    st.write("This is the second page of my app.")
 
 if selected_page == "Benutzer bearbeiten":
     AddDelUp = st.selectbox('Wähle eine Option aus:', ['Benutzer hinzufügen', 'Benutzer löschen', 'Benutzer bearbeiten'])
     
     if AddDelUp == 'Benutzer hinzufügen':
         st.title("Benutzer hinzufügen")
-
         col1,col2,col3 = st.columns(3)
         with col1:
             NewUserID = 1
@@ -81,74 +81,95 @@ if selected_page == "Benutzer bearbeiten":
             else:
                 st.write("Bitte alle Felder ausfüllen und Eingaben überprüfen")  
         
-
-
-
-
     if AddDelUp == 'Benutzer löschen':
         FeldID = st.text_input("ID")
         if type(FeldID) == str and FeldID.isnumeric():
             Daten = person.Person.find_person_data_by_id(db,int(FeldID))
+            Bild = True
             try:
                 st.image(Daten[0]['picture_path'], caption='Ausgewählter User', use_column_width=True)
             except:
                 st.image('data/pictures/none.jpg', caption='Kein Bild vorhanden', use_column_width=True)
+                Bild = False
             if st.button("Benutzer entfernen"):
                 person.Person.del_user(db,int(FeldID))
                 st.write("Benutzer wurde gelöscht")
-                os.remove(Daten[0]['picture_path'])
-                for ekg in Daten[0]['ekg_tests']:
-                    os.remove(ekg["result_link"])
+                if Bild == True:
+                    os.remove(Daten[0]['picture_path'])
+                    for ekg in Daten[0]['ekg_tests']:
+                        os.remove(ekg["result_link"])
             if Daten == None:
                 st.write("ID nicht gefunden")
 
-
-
-
-
-
-
     if AddDelUp == 'Benutzer bearbeiten':
         st.title("Benutzer bearbeiten")
-
-
+        user_list = person.Person.get_person_list(db)
+        # Benutzer-ID auswählen
+        user_id = st.selectbox("Benutzer auswählen", user_list)
+        Daten = person.Person.find_person_data_by_name(db,user_id)
+        col1,col2,col3 = st.columns(3)
+        with col1:
+            LabelFirstname = st.text_input("Vorname",value=(Daten[0]['firstname']))
+            LabelPic = st.text_input("Dateipfad zum Bild",value=(Daten[0]['picture_path']))
+        with col2:
+            LabelLastname = st.text_input('Nachname',value=(Daten[0]['lastname']))
+        with col3:
+            LabelBirth = st.text_input('Geburtsjahr',value=(Daten[0]['date_of_birth']))
+            try:
+                st.image(Daten[0]['picture_path'], caption='User', use_column_width=True)
+            except:
+                st.image('data/pictures/none.jpg', caption='Kein Bild vorhanden', use_column_width=True)
+        if st.button("Benutzerdaten ändern"):
+            if LabelFirstname.strip() and LabelLastname.strip() and LabelBirth.strip() and LabelBirth.isnumeric():
+                person.Person.update_user(db,Daten[0]['id'],LabelFirstname,LabelLastname,LabelBirth,Daten[0]['ekg_tests'],LabelPic)
+                st.write("Benutzerdaten wurden geändert")
+            else:
+                st.write("Bitte alle Felder ausfüllen und Eingaben überprüfen")
 
     
     
 
-
-
-    
-    
-    
-    """
-    col1,col2,col3 = st.columns(3)
-    with col1:
-        image_path = 'data/pictures/none.jpg'
-        st.image(image_path, caption='User', use_column_width=True)
-    with col2:
-        FeldID = st.text_input("ID")
-    with col3:
-        def button1_action():
-            st.write("Button 1 wurde gedrückt!")
-        def button2_action():
-            st.write("Button 2 wurde gedrückt!")
-        def button3_action():
-            st.write("Button 3 wurde gedrückt!")
-
-        if st.button("Benutzer hinzufügen"):
-            button1_action()
-        if st.button("Benutzer löschen"):
-            button2_action()
-        if st.button("Benutzer bearbeiten"):
-            button3_action()"""
-
-if selected_page == "Neues EKG hinzufügen":
+if selected_page == "EKGs":
     st.title("Neues EKG hinzufügen")
-    st.write("This is the fourth page of my app.")
+    user_list = person.Person.get_person_list(db)
+    # Benutzer-ID auswählen
+    user_id = st.selectbox("Benutzer auswählen", user_list)
+    Datenecg = person.Person.find_person_data_by_name(db,user_id)
+    if len(Datenecg[0]['ekg_tests']) > 1:
+        slider_value = st.slider('Wähle einen Wert:', min_value=0, max_value=(len(Datenecg[0]['ekg_tests'])-1), value=0, step=1)
+        EKGs = ekgdata.EKGdata(Datenecg[0]['ekg_tests'][slider_value])
+        st.plotly_chart(EKGs.fig)
+        st.write("EKG-ID: ",EKGs.id)
+        st.write("EKG-Datum",EKGs.date)
+        st.write("EKG-estimated HR",round(EKGs.estimated_hr,2))
+        if EKGs.estimated_hr > 100:
+            st.write("Rhytmisch, Tachykard")
+        elif EKGs.estimated_hr > 60:
+            st.write("Rhytmisch, normofrequent")
+        else:
+            st.write("Rhythmisch, bradykard")
+    else:
+        try:
+            EKG = ekgdata.EKGdata(Datenecg[0]['ekg_tests'][0])
+            st.plotly_chart(EKG.fig)
+            st.write("EKG-ID: ",EKG.id)
+            st.write("EKG-Datum",EKG.date)
+            st.write("EKG-estimated HR",round(EKG.estimated_hr,2))
+            if EKG.estimated_hr > 100:
+                st.write("Rhytmisch, Tachykard")
+            elif EKG.estimated_hr > 60:
+                st.write("Rhytmisch, normofrequent")
+            else:
+                st.write("Rhythmisch, bradykard")
+        except:
+            st.write("Keine EKG-Daten gefunden.")
 
 if selected_page == "BMI-Rechner": 
    BMI.bmi_calc()
+
+if selected_page == "Kalorienrechner":
+    st.title("Ernährungsberatung & Kalorienrechner")
+    Ernährungsberatung.nutrition_advice()
 
 if selected_page == "Trainingstagebuch":
     st.title("Trainingstagebuch")

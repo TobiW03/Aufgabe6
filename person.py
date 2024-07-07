@@ -126,15 +126,15 @@ class Person:
         database.remove(doc_ids=[id])
 
     @staticmethod
-    def update_user(id, firstname, lastname, date_of_birth, ekg_tests, picture_path):
+    def update_user(database,id, firstname, lastname, date_of_birth, ekg_tests, picture_path):
         """A Function that updates a user in the person database"""
         # Abfrageobjekt für TinyDB erstellen
         Person = Query()
         # Eintrag in der Datenbank suchen
-        Erg = db.search(Person.id == id)
+        Erg = database.search(Person.id == id)
         if Erg:
             # Eintrag in der Datenbank aktualisieren
-            db.update({"firstname": firstname, 
+            database.update({"firstname": firstname, 
                         "lastname": lastname, 
                         "id": id, 
                         "date_of_birth": date_of_birth, 
@@ -153,17 +153,17 @@ class Person:
         return list_of_names
     
     @staticmethod
-    def find_person_data_by_name(suchstring):
+    def find_person_data_by_name(database,suchstring):
         """ Eine Funktion der Nachname, Vorname als ein String übergeben wird
         und die die Person als Dictionary zurück gibt"""
-        fullname = suchstring.split(", ")
-        fn = fullname[1]
-        ln = fullname[0]
+        fullname = suchstring.split(" ")
+        fn = fullname[0]
+        ln = fullname[1]
 
         # Abfrageobjekt für TinyDB erstellen
         Person = Query()
         # Eintrag in der Datenbank suchen
-        Erg = db.search(Person.firstname == fn and Person.lastname == ln)
+        Erg = database.search(Person.firstname == fn and Person.lastname == ln)
         if Erg:
             return (Erg)
         else:
@@ -280,7 +280,11 @@ if __name__ == "__main__":
     Person.load_person_data(db,"data/person_db.json")
     Person.load_person_data(db,"data/personstest.csv")
     #print(Person.get_person_list(db))
-    #print(Person.find_person_data_by_name("Huber, Julian"))
+
+
+
+
+    print(Person.find_person_data_by_name(db,"Julian Huber"))
     #print(Person.find_person_data_by_id(db,3))
     #Person1 = Person(db.get(doc_id=1))
     #print(Person1.maxHR)
