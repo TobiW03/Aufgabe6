@@ -12,11 +12,11 @@ import Ernährungsberatung
 @st.cache(allow_output_mutation=True)
 def load_data():
     db = TinyDB("data/PersonsDatabase.json")
-    #db.truncate()
+    db.truncate()
     person.Person.load_person_data(db,"data/person_db.json")
     person.Person.load_person_data(db,"data/personstest.csv")
     dbecg = TinyDB("data/EKGDatabase.json")
-    #dbecg.truncate()
+    dbecg.truncate()
     ekgdata.EKGdata.load_ekg_data(dbecg,"data/person_db.json")
     return db,dbecg
 
