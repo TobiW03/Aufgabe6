@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit_option_menu as som
 import pandas as pd
-import pickle, person, BMI, Home
+import BMI, Home
 from tinydb import TinyDB, Query
 import person
 import os
@@ -21,9 +21,6 @@ def load_data():
     return db,dbecg
 
 db,dbecg = load_data()
-#print(person.Person.find_person_data_by_id(db,5))
-#print(person.Person.find_person_data_by_id(db,4))
-
 
 with st.sidebar:
     selected_page = som.option_menu("Navigation", ["Home", "Kalorienrechner", "Benutzer bearbeiten", "EKGs", "BMI-Rechner", "Trainingstagebuch"])
