@@ -144,6 +144,19 @@ class Person:
             print("Person nicht gefunden")
 
     @staticmethod
+    def update_diary(database,id, diary):
+        """A Function that updates the diary of a user in the person database"""
+        # Abfrageobjekt für TinyDB erstellen
+        Person = Query()
+        # Eintrag in der Datenbank suchen
+        Erg = database.search(Person.id == id)
+        if Erg:
+            # Eintrag in der Datenbank aktualisieren
+            database.update({"diary": diary}, Person.id == id)
+        else:
+            print("Person nicht gefunden")
+
+    @staticmethod
     def get_person_list(db):
         """A Function that takes the persons-dictionary and returns a list auf all person names"""
         list_of_names = [] #Liste für alle Namen

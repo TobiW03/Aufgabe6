@@ -12,11 +12,11 @@ import Ernährungsberatung
 @st.cache(allow_output_mutation=True)
 def load_data():
     db = TinyDB("data/PersonsDatabase.json")
-    db.truncate()
+    #db.truncate()
     person.Person.load_person_data(db,"data/person_db.json")
     person.Person.load_person_data(db,"data/personstest.csv")
     dbecg = TinyDB("data/EKGDatabase.json")
-    dbecg.truncate()
+    #dbecg.truncate()
     ekgdata.EKGdata.load_ekg_data(dbecg,"data/person_db.json")
     return db,dbecg
 
@@ -188,18 +188,15 @@ if selected_page == "Trainingstagebuch":
 
     # Funktion zum Laden des DataFrames aus der Datei
     def load_dataframe(user_id):
-        filename = f"{user_id}_edited_df.pkl"
-        if os.path.exists(filename):
-            with open(filename, "rb") as file:
-                return pickle.load(file)
-        else:
-            return create_default_dataframe()
+        datas = person.Person.find_person_data_by_name(db,user_id)
+        df = pd.DataFrame(datas[0]['diary'])
+        return df
 
     # Funktion zum Speichern des DataFrames in eine Datei
     def save_dataframe(df, user_id):
-        filename = f"{user_id}_edited_df.pkl"
-        with open(filename, "wb") as file:
-            pickle.dump(df, file)
+        Daten = person.Person.find_person_data_by_name(db,user_id)
+        df_dict = df.to_dict(orient="records")
+        person.Person.update_diary(db,Daten[0]['id'],df_dict)
 
     # Beispiel-Benutzerliste
     user_list = person.Person.get_person_list(db)
@@ -231,6 +228,3 @@ if selected_page == "Trainingstagebuch":
 
         st.write("Bearbeiten Sie den DataFrame und klicken Sie auf 'Daten speichern', um Änderungen zu speichern.")
         st.write("Klicken Sie auf 'Daten zurücksetzen', um den DataFrame auf die Standardwerte zurückzusetzen.")
-
-    
-

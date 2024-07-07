@@ -19,7 +19,14 @@ class EKGdata:
             with open(file_path) as file:
                 ekg_data = json.load(file)
                 for element in ekg_data:
-                    databaseecg.insert(element["ekg_tests"][0])
+                    for ecg in element["ekg_tests"]:
+                        IDCheck = Query()
+                        ekg_id = ecg['id']
+                        result = databaseecg.search(IDCheck.id == ekg_id)
+                        if result:
+                            print("ID already exists")
+                        else:
+                            databaseecg.insert(ecg)
 
     def __init__(self, ekg_dict):
         self.id = ekg_dict["id"]
@@ -48,9 +55,6 @@ class EKGdata:
         self.seriestest = pd.Series(self.estimated_hr_list)
         # Berechnung des gleitenden Mittelwerts mit einem Fenster von 25
         self.rolling_mean = self.seriestest.rolling(window=25).mean()
-
-        print(len(self.rolling_mean))
-        print(len(self.estimated_hr_list))
 
         return self.estimated_hr
 
@@ -102,7 +106,7 @@ class EKGdata:
 if __name__ == "__main__":
     dbecg = TinyDB("data/EKGDatabase.json")
     dbecg.truncate()
-    EKGdata.load_ekg_data("data/person_db.json")
+    EKGdata.load_ekg_data(dbecg,"data/person_db.json")
     first_entry = dbecg.all()[0]
     EKG1 = EKGdata(first_entry)
-    print(EKG1.estimated_hr)
+    #print(EKG1.estimated_hr)
