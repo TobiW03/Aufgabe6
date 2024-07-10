@@ -1,6 +1,7 @@
 import streamlit as st
 
 def calculate_calories(sex, age, weight, height, activity_level):
+    """Funktion zur Berechnung des täglichen Kalorienbedarfs."""
     if sex == "Männlich":
         bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
     else:
@@ -18,6 +19,7 @@ def calculate_calories(sex, age, weight, height, activity_level):
     return calories
 
 def nutrition_advice():
+    """Funktion zur Ernährungsberatung."""
     st.title("Ernährungsberatung")
     
     goal = st.selectbox("Ziel auswählen", ["Definierter werden", "Form halten", "Mehr Masse aufbauen"])

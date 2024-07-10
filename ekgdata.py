@@ -7,8 +7,10 @@ import os
 import json
 
 class EKGdata:
+    """Klasse zur Verarbeitung von EKG-Daten."""
     @staticmethod
-    def load_ekg_data(databaseecg,file_path):
+    def load_ekg_data(databaseecg,file_path):#
+        """Methode zum Laden von EKG-Daten aus einer JSON-Datei."""
         def detect_file_type(file_path):
             _, file_extension = os.path.splitext(file_path)
             return file_extension.lower()
@@ -29,6 +31,7 @@ class EKGdata:
                             databaseecg.insert(ecg)
 
     def __init__(self, ekg_dict):
+        """Initialisierung der EKG-Daten."""
         self.id = ekg_dict["id"]
         self.date = ekg_dict["date"]
         self.data = ekg_dict["result_link"]
@@ -39,10 +42,12 @@ class EKGdata:
         self.fig = self.plot_time_series()
 
     def find_peaks_ekg(self):
+        """Methode zur Detektion von Peaks im EKG-Signal."""
         peaks, properties = find_peaks(self.df['EKG in mV'], height=330, distance=200, prominence=60)
         return peaks, properties
     
     def estimate_hr(self):
+        """Methode zur Schätzung der Herzfrequenz."""
         self.estimated_hr_list = []
         peaks_times = self.df['Time in ms'][self.peaks]
         for i in range(1, len(peaks_times)):
@@ -59,6 +64,7 @@ class EKGdata:
         return self.estimated_hr
 
     def plot_time_series(self):
+        """Methode zur Erstellung eines interaktiven Zeitreihenplots."""
         self.fig = go.Figure()
         time_values_ms = np.arange(0, len(self.df['Time in ms']) * 2, 2)
         time_values_s = time_values_ms / 1000
@@ -90,6 +96,7 @@ class EKGdata:
 
     @staticmethod
     def load_by_id(id, ekg_instances):
+        """Methode zum Laden von EKG-Daten anhand einer ID."""
         id_found = False
         for ekg in ekg_instances:
             if ekg.id == id:

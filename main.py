@@ -2,7 +2,7 @@ import streamlit as st
 import streamlit_option_menu as som
 import pandas as pd
 import BMI, Home
-from tinydb import TinyDB, Query
+from tinydb import TinyDB
 import person
 import os
 from datetime import datetime
@@ -21,17 +21,19 @@ def load_data():
     ekgdata.EKGdata.load_ekg_data(dbecg,"data/person_db.json")
     return db,dbecg
 
-db,dbecg = load_data()
+db,dbecg = load_data() #Datenbanken laden
 
 with st.sidebar:
-    selected_page = som.option_menu("Navigation", ["Home", "Kalorienrechner", "Benutzer bearbeiten", "EKGs", "BMI-Rechner", "Trainingstagebuch"])
+    selected_page = som.option_menu("Navigation", ["Home", "Kalorienrechner", "Benutzerverwaltung", "EKGs", "BMI-Rechner", "Trainingstagebuch"])
 
 if selected_page == "Home": #Homepage
     Home.home()
 
-if selected_page == "Benutzer bearbeiten": #Benutzer hinzufügen, löschen, bearbeiten
-    AddDelUp = st.selectbox('Wähle eine Option aus:', ['Benutzer hinzufügen', 'Benutzer löschen', 'Benutzer bearbeiten'])
+if selected_page == "Benutzerverwaltung": #Benutzer hinzufügen, löschen, bearbeiten
     
+    AddDelUp = st.selectbox('Wähle eine Option aus:', ['Benutzer hinzufügen', 'Benutzer löschen', 'Benutzer bearbeiten'])
+    """Funktion zur Benutzerverwaltung - add,del,update."""
+
     if AddDelUp == 'Benutzer hinzufügen':
         st.title("Benutzer hinzufügen")
         col1,col2,col3 = st.columns(3)
@@ -51,20 +53,19 @@ if selected_page == "Benutzer bearbeiten": #Benutzer hinzufügen, löschen, bear
 
         if st.button("Benutzer hinzufügen"):
             if LabelYear.strip() and LabelFirstname.strip() and LabelLastname.strip() and EKGUpload and PictureUpload and LabelYear.isnumeric():
+                """Year,Firstname,Lastname,EKGupload,Picupload sind nicht leer und Year ist numerisch."""
                 EKGUploadpath = os.path.join("data/ekg_data",EKGUpload.name)
                 PictureUploadpath = os.path.join("data/pictures",PictureUpload.name)
 
                 NewECGID = 1
-                for user in db:
-                    print(user['ekg_tests'])
+                for user in db: #frühest freie ID wird vergeben
                     for ecgtest in user['ekg_tests']:
                         if NewECGID == ecgtest['id']:
-                            print(ecgtest['id'])
                             NewECGID += 1
                 
                 heute = datetime.today()
                 datum_format = heute.strftime("%d-%m-%Y")
-
+                #Beim Hochladen eines EKGs die EKG Daten in die Datenbank speichern
                 EKGInfo = [{
                     "id":NewECGID,
                     "date":datum_format,
@@ -82,7 +83,7 @@ if selected_page == "Benutzer bearbeiten": #Benutzer hinzufügen, löschen, bear
     if AddDelUp == 'Benutzer löschen':
         FeldID = st.text_input("ID")
         if type(FeldID) == str and FeldID.isnumeric():
-            Daten = person.Person.find_person_data_by_id(db,int(FeldID))
+            Daten = person.Person.find_person_data_by_id(db,int(FeldID)) #Abfrage in Datenbank nach ID
             Bild = True
             try:
                 st.image(Daten[0]['picture_path'], caption='Ausgewählter User', use_column_width=True)
@@ -102,7 +103,7 @@ if selected_page == "Benutzer bearbeiten": #Benutzer hinzufügen, löschen, bear
     if AddDelUp == 'Benutzer bearbeiten':
         st.title("Benutzer bearbeiten")
         user_list = person.Person.get_person_list(db)
-        # Benutzer-ID auswählen
+        # Benutzer auswählen
         user_id = st.selectbox("Benutzer auswählen", user_list)
         Daten = person.Person.find_person_data_by_name(db,user_id)
         col1,col2,col3 = st.columns(3)
@@ -119,13 +120,11 @@ if selected_page == "Benutzer bearbeiten": #Benutzer hinzufügen, löschen, bear
                 st.image('data/pictures/none.jpg', caption='Kein Bild vorhanden', use_column_width=True)
         if st.button("Benutzerdaten ändern"):
             if LabelFirstname.strip() and LabelLastname.strip() and LabelBirth.strip() and LabelBirth.isnumeric():
+                """Firstname,Lastname,Birth sind nicht leer und Birth ist numerisch."""
                 person.Person.update_user(db,Daten[0]['id'],LabelFirstname,LabelLastname,LabelBirth,Daten[0]['ekg_tests'],LabelPic)
                 st.write("Benutzerdaten wurden geändert")
             else:
                 st.write("Bitte alle Felder ausfüllen und Eingaben überprüfen")
-
-    
-    
 
 if selected_page == "EKGs":
     st.title("EKG Übersicht")
@@ -134,16 +133,16 @@ if selected_page == "EKGs":
     user_id = st.selectbox("Benutzer auswählen", user_list)
     Datenecg = person.Person.find_person_data_by_name(db,user_id)
     if len(Datenecg[0]['ekg_tests']) > 1:
-        slider_value = st.slider('Wähle einen Wert:', min_value=0, max_value=(len(Datenecg[0]['ekg_tests'])-1), value=0, step=1)
+        slider_value = st.slider('Wähle einen Wert:', min_value=0, max_value=(len(Datenecg[0]['ekg_tests'])-1), value=0, step=1) #Falls mehrere EKGs auf eine Person
         EKGs = ekgdata.EKGdata(Datenecg[0]['ekg_tests'][slider_value])
         st.plotly_chart(EKGs.fig)
         st.write("EKG-ID: ",EKGs.id)
         st.write("EKG-Datum",EKGs.date)
         st.write("EKG-estimated HR",round(EKGs.estimated_hr,2))
         if EKGs.estimated_hr > 100:
-            st.write("Rhytmisch, Tachykard")
+            st.write("Rhythmisch, Tachykard")
         elif EKGs.estimated_hr > 60:
-            st.write("Rhytmisch, normofrequent")
+            st.write("Rhythmisch, normofrequent")
         else:
             st.write("Rhythmisch, bradykard")
     else:
@@ -154,9 +153,9 @@ if selected_page == "EKGs":
             st.write("EKG-Datum",EKG.date)
             st.write("EKG-estimated HR",round(EKG.estimated_hr,2))
             if EKG.estimated_hr > 100:
-                st.write("Rhytmisch, Tachykard")
+                st.write("Rhythmisch, Tachykard")
             elif EKG.estimated_hr > 60:
-                st.write("Rhytmisch, normofrequent")
+                st.write("Rhythmisch, normofrequent")
             else:
                 st.write("Rhythmisch, bradykard")
         except:
@@ -188,8 +187,7 @@ if selected_page == "Trainingstagebuch":
     def load_dataframe(user_id):
         datas = person.Person.find_person_data_by_name(db,user_id)
         df = pd.DataFrame(datas[0]['diary'])
-        print(df)
-        wochentage = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
+        wochentage = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'] #Index erneut setzen
         df.index = wochentage
         return df
 

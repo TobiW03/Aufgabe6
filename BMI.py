@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 
 def bmi_calc():
+    """Funktion zur Berechnung des BMI und der Gewichtsklasse."""
     st.title("BMI-Rechner")
     weight = st.text_input("Gewicht in kg", None)
     height = st.text_input("Größe in cm", None)

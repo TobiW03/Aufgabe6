@@ -4,9 +4,9 @@ from tinydb import TinyDB, Query
 import os
 import csv
 import pandas as pd
-import ast
 
 class Person:
+    """A Class that represents a person with all its attributes"""
     @staticmethod
     def load_person_data(database,file_path):
         """A Function that knows where the person Database is and returns a Dictionary with the Persons"""
@@ -21,6 +21,7 @@ class Person:
         file_extension = detect_file_type(file_path)
 
         if file_extension == ".json":
+            """A Function that loads the person data from a JSON file and inserts it into the person database"""
             file = open(file_path)
             person_data = json.load(file)
             for element in person_data:
@@ -53,6 +54,7 @@ class Person:
                             database.insert(element)
 
         elif file_extension == ".csv":
+            """A Function that loads the person data from a CSV file and inserts it into the person database"""
             with open(file_path, mode='r', newline='',encoding='utf-8') as file:
                 reader = csv.DictReader(file)
                 for row in reader:
@@ -216,25 +218,9 @@ class Person:
                     #self.dfdiary = self.dfdiary.set_index("Wochentag")
             else:
                 print("Person nicht gefunden")
-    
-    #unklar, ob Funktion noch benötigt wird
-    def load_dataframe(self,user_id):
-        """Funktion zum Laden des DataFrames aus einer Datei"""
-        filename = f"{user_id}_edited_df.pkl"
-        if os.path.exists(filename):
-            with open(filename, "rb") as file:
-                return pickle.load(file)
-        else:
-            return create_default_dataframe()
-    #unklar, ob Funktion noch benötigt wird
-    def save_dataframe(df, user_id):
-        """Funktion zum Speichern des DataFrames in einer Datei"""
-        filename = f"{user_id}_edited_df.pkl"
-        with open(filename, "wb") as file:
-            pickle.dump(df, file)
-    
         
     def __init__(self, person_dict) -> None:
+        """Initialisierung der Person mit den Attributen aus dem Dictionary"""
         self.date_of_birth = person_dict["date_of_birth"]
         self.firstname = person_dict["firstname"]
         self.lastname = person_dict["lastname"]
@@ -260,17 +246,20 @@ class Person:
         return self.dfdiary
 
     def calc_age(self):
+        """Methode zur Berechnung des Alters der Person."""
         date = datetime.now()
         currentyear = date.year
         age = currentyear - self.date_of_birth
         return age
 
     def calc_max_heart_rate(self):
+        """Methode zur Berechnung der maximalen Herzfrequenz der Person."""
         maxHR = 220-self.age
         return maxHR
 
     @staticmethod
     def load_by_id(id, personOBJ):
+        """Methode zum Laden einer Person anhand der ID."""
         id_found = False
         for person in personOBJ:
             if person.id == id:
