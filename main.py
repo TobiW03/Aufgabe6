@@ -11,6 +11,7 @@ import Ernährungsberatung
 
 @st.cache(allow_output_mutation=True)
 def load_data():
+    """Cache für das Laden der Datenbanken und der EKG-Datenbank."""
     db = TinyDB("data/PersonsDatabase.json")
     db.truncate()
     person.Person.load_person_data(db,"data/person_db.json")
@@ -25,10 +26,10 @@ db,dbecg = load_data()
 with st.sidebar:
     selected_page = som.option_menu("Navigation", ["Home", "Kalorienrechner", "Benutzer bearbeiten", "EKGs", "BMI-Rechner", "Trainingstagebuch"])
 
-if selected_page == "Home":
+if selected_page == "Home": #Homepage
     Home.home()
 
-if selected_page == "Benutzer bearbeiten":
+if selected_page == "Benutzer bearbeiten": #Benutzer hinzufügen, löschen, bearbeiten
     AddDelUp = st.selectbox('Wähle eine Option aus:', ['Benutzer hinzufügen', 'Benutzer löschen', 'Benutzer bearbeiten'])
     
     if AddDelUp == 'Benutzer hinzufügen':
@@ -36,14 +37,14 @@ if selected_page == "Benutzer bearbeiten":
         col1,col2,col3 = st.columns(3)
         with col1:
             NewUserID = 1
-            for entry in db:
+            for entry in db: #jeder User mit neuer ID, welche noch nicht vergeben ist und die niedrigst freiest mögliche nimmt.
                 if NewUserID == entry['id']:
                     NewUserID += 1
             st.markdown(("ID: ",NewUserID))
             LabelYear = st.text_input("Geburtsjahr: ")
         with col2:
             LabelFirstname = st.text_input("Vorname: ")
-            EKGUpload = st.file_uploader("EKG Datei hochladen: ",type=['csv'])
+            EKGUpload = st.file_uploader("EKG Datei hochladen: ",type=['csv','txt'])
         with col3:
             LabelLastname = st.text_input("Nachname: ")
             PictureUpload = st.file_uploader("Bild Datei hochladen: ",type=['jpg','png','jpeg'])
