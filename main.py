@@ -13,11 +13,11 @@ import Ernährungsberatung
 def load_data():
     """Cache für das Laden der Datenbanken und der EKG-Datenbank."""
     db = TinyDB("data/PersonsDatabase.json")
-    db.truncate()
+    #db.truncate()
     person.Person.load_person_data(db,"data/person_db.json")
     person.Person.load_person_data(db,"data/personstest.csv")
     dbecg = TinyDB("data/EKGDatabase.json")
-    dbecg.truncate()
+    #dbecg.truncate()
     ekgdata.EKGdata.load_ekg_data(dbecg,"data/person_db.json")
     return db,dbecg
 
@@ -128,7 +128,7 @@ if selected_page == "Benutzer bearbeiten": #Benutzer hinzufügen, löschen, bear
     
 
 if selected_page == "EKGs":
-    st.title("Neues EKG hinzufügen")
+    st.title("EKG Übersicht")
     user_list = person.Person.get_person_list(db)
     # Benutzer-ID auswählen
     user_id = st.selectbox("Benutzer auswählen", user_list)
@@ -188,6 +188,9 @@ if selected_page == "Trainingstagebuch":
     def load_dataframe(user_id):
         datas = person.Person.find_person_data_by_name(db,user_id)
         df = pd.DataFrame(datas[0]['diary'])
+        print(df)
+        wochentage = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag']
+        df.index = wochentage
         return df
 
     # Funktion zum Speichern des DataFrames in eine Datei
