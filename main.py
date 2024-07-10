@@ -165,7 +165,6 @@ if selected_page == "BMI-Rechner":
    BMI.bmi_calc()
 
 if selected_page == "Kalorienrechner":
-    st.title("Ernährungsberatung & Kalorienrechner")
     Ernährungsberatung.nutrition_advice()
 
 if selected_page == "Trainingstagebuch":

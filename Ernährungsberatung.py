@@ -20,7 +20,8 @@ def calculate_calories(sex, age, weight, height, activity_level):
 
 def nutrition_advice():
     """Funktion zur Ernährungsberatung."""
-    st.title("Ernährungsberatung")
+
+    st.header("Ernährungsberatung")
     
     goal = st.selectbox("Ziel auswählen", ["Definierter werden", "Form halten", "Mehr Masse aufbauen"])
    
